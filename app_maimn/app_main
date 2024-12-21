@@ -1,0 +1,67 @@
+import dash
+import dash_bootstrap_components as dbc
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import dash_bootstrap_components as dbc
+import ast
+import pandas as pd
+import numpy as np
+import graphs
+import cards
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+n=5
+
+app.layout = html.Div([
+  dbc.Container([
+    html.H1('Погода на маршруте', className='text-center text-dark'),
+    # Строка для всех карт в одном столбце
+    dbc.Row([
+      dbc.Col(cards.card_start_weather, md=12),  # Начальная карта
+      dbc.Col(cards.card_end_weather, md=12),  # Конечная карта
+    ]),
+    dbc.Row(cards.cards_dop)
+  ], fluid=True)
+])
+
+
+
+@app.callback(
+    Output('output-start-weather', 'children'),
+          Output('slider-output-start', 'children'),
+    Input('dropdown-weather-start', 'value'),
+    Input('my-slider-start', 'value')
+)
+def update_start_weather(selected_value, value):
+    graph_temp = graphs.create_temp(accu_weather.get_forecast_0().head(value))
+    graph_wind = graphs.create_wind(graphs.df.head(value))
+    graph_hum = graphs.create_hum(graphs.df.head(value))
+    if selected_value == '1':
+        return "Вы выбрали: Ветер",graph_wind
+    elif selected_value == '2':
+        return "Вы выбрали: Влажность", graph_hum
+    elif selected_value == '3':
+        return "Вы выбрали: Температура", graph_temp
+    return "Выберите параметр"
+
+# Колбэки для обновления вывода для каждой дополнительной карты
+for i in range(1, n + 1):
+    @app.callback(
+        Output(f'output-{i}-weather', 'children'),
+        Input(f'dropdown-weather-{i}', 'value')
+    )
+    def update_weather(selected_value, card_type=i):
+        if selected_value == '1':
+            return f"Вы выбрали: Ветер для точки { card_type}"
+        elif selected_value == '2':
+            return f"Вы выбрали: Влажность для точки {card_type}"
+        elif selected_value == '3':
+            return f"Вы выбрали: Температура для точки {card_type}"
+        return "Выберите параметр"
+
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
