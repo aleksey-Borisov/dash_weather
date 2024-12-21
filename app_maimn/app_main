@@ -4,16 +4,16 @@ from dash import dcc, html
 from dash.dependencies import Input, Output
 import graphs  # Убедитесь, что этот модуль доступен
 import accu_weather
-# Инициализация приложения
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-# Глобальная переменная для хранения данных
+
 global_data = {
     'start': 'Москва',
     'end': 'Санкт-Петербург'
 }
 
-# Основной макет приложения
+
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
     html.Div(id='page-content'),  # Контейнер для отображения содержимого страниц
@@ -48,7 +48,6 @@ card_button = dbc.Card([
     ], className='text-center')
 ])
 
-# Функция для отображения формы
 def form_layout():
     return dbc.Container([
         dbc.Row([dbc.Col(card_start, md=4)], align='center', justify='center'),
@@ -68,7 +67,7 @@ def weather_layout():
         ], fluid=True)
     ])
 
-# Коллбэки для обновления начальной и конечной точек
+
 @app.callback(
     Output('output-start', 'children'),
     Input('submit-start', 'n_clicks'),
@@ -91,7 +90,7 @@ def update_end_output(n_clicks, value):
         return f'Вы ввели конечную точку: {value}'
     return ''
 
-# Коллбэк для отображения текущего состояния global_data
+
 @app.callback(
     Output('global-data-output', 'children'),
     Input('submit-start', 'n_clicks'),
@@ -100,7 +99,7 @@ def update_end_output(n_clicks, value):
 def update_global_data(n_clicks_start, n_clicks_end):
     return f'Текущие данные: Начальная точка - {global_data["start"]}, Конечная точка - {global_data["end"]}'
 
-# Коллбэк для отображения страницы погоды
+
 @app.callback(
     Output('page-content', 'children'),
     Input('url', 'pathname')
@@ -110,7 +109,7 @@ def display_page(pathname):
         return weather_layout()  # Возвращаем макет страницы погоды
     return form_layout()  # Возвращаем макет формы по умолчанию
 
-# Коллбэк для перехода на страницу погоды
+
 @app.callback(
     Output('url', 'pathname'),
     Input('go-to-page-weather', 'n_clicks')
@@ -120,7 +119,7 @@ def go_to_weather(n_clicks):
         return '/page-weather'
     return dash.no_update
 
-# Определение карточек для отображения погоды
+
 card_start_weather = dbc.Card([
     dbc.CardHeader(html.P("Начальная точка", id='card-start-header', className='text-left')),
     dbc.CardBody([
