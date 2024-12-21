@@ -1,0 +1,72 @@
+import dash
+import dash_bootstrap_components as dbc
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import dash_bootstrap_components as dbc
+import ast
+import pandas as pd
+import numpy as np
+import app_main
+import cards
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+n=5
+
+weather = [{'temp': -13.4, 'wind_speed': 24.1, 'Humidity': 81, 'date': '2024-12-18'},
+ {'temp': -6.25, 'wind_speed': 14.8, 'Humidity': 86, 'date': '2024-12-19'},
+ {'temp': 1.4, 'wind_speed': 16.7, 'Humidity': 99, 'date': '2024-12-20'},
+ {'temp': -0.95, 'wind_speed': 14.8, 'Humidity': 89, 'date': '2024-12-21'},
+ {'temp': -2.75, 'wind_speed': 13.0, 'Humidity': 85, 'date': '2024-12-22'}]
+
+
+df = pd.DataFrame(weather)
+
+
+def create_temp(df):
+  fig_temp = px.line(df, x='date', y='temp', title='Температура по дням', markers=True)
+  fig_temp.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+  )
+  fig_temp.update_traces(mode='lines+markers', line=dict(width=4), marker=dict(size=10))
+  fig_temp.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+    xaxis_title='Дата',  # Подпись оси X
+    yaxis_title='Температура (°C)',  # Подпись оси Y
+  )
+  fig_temp.update_traces(mode='lines+markers')
+  return dcc.Graph(id='scatter-graph', figure=fig_temp)
+
+def create_wind(df):
+  fig_wind = px.line(df, x='date', y='wind_speed', title='Температура по дням', markers=True)
+  fig_wind.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+  )
+  fig_wind.update_traces(mode='lines+markers', line=dict(width=4), marker=dict(size=10))
+  fig_wind.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+    xaxis_title='Дата',  # Подпись оси X
+    yaxis_title='Скорость ветра',  # Подпись оси Y
+  )
+  fig_wind.update_traces(mode='lines+markers')
+  return dcc.Graph(id='scatter-graph_wind', figure=fig_wind)
+
+
+def create_hum(df):
+  fig_hum = px.line(df, x='date', y='Humidity', title='Влажность по дням по дням', markers=True)
+  fig_hum.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+  )
+  fig_hum.update_traces(mode='lines+markers', line=dict(width=4), marker=dict(size=10))
+  fig_hum.update_layout(
+    width=600,  # Ширина графика
+    height=600,  # Высота графика
+    xaxis_title='Дата',  # Подпись оси X
+    yaxis_title='Влажность',  # Подпись оси Y
+  )
+  fig_hum.update_traces(mode='lines+markers')
+  return dcc.Graph(id='scatter-graph_wind', figure=fig_hum)
