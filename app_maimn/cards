@@ -1,0 +1,94 @@
+import dash
+import dash_bootstrap_components as dbc
+from dash import dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import dash_bootstrap_components as dbc
+import ast
+import pandas as pd
+import numpy as np
+import graphs
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+n=5
+
+
+def create_weather_card(card_type):
+  return dbc.Card([
+    dbc.CardHeader(f'{card_type} доп. точка маршрута', className='text-left'),
+    dbc.CardBody([
+      html.P("Выбери погодный параметр для просмотра", className='card-text'),
+      dcc.Dropdown(
+        id=f'dropdown-weather-{card_type}',
+        options=[
+          {'label': 'Ветер', 'value': '1'},
+          {'label': 'Влажность', 'value': '2'},
+          {'label': 'Температура', 'value': '3'}
+        ]
+      ),
+      html.Div(id=f'output-div_weather-{card_type}'),
+      html.Div(id=f'output-{card_type}-weather', className='mt-3')
+      ,  html.Div(id=f'output-div_weather-{card_type}'),
+        html.Div(id=f'output-{card_type}-weather', className='mt-3'),dcc.Slider(
+        id='my-slider_start',
+        min=1,
+        max=5,
+        step=1,
+        value=5,
+        marks={i: str(i) for i in range(1, 6, 1)}
+    ),
+    html.Div(id=f'slider-output-{card_type}')
+    ])
+  ], className='mb-4', style={'width': '800px'})
+
+
+cards_dop = [dbc.Row(dbc.Col(create_weather_card(i+1), md=12)) for i in range(n)]
+
+
+card_start_weather = dbc.Card([
+    dbc.CardHeader('Начальная точка маршрута', className='text-left'),
+    dbc.CardBody([
+html.P("Выбери погодный параметр для просмотра", className='card-text'),
+        dcc.Dropdown(
+            id='dropdown-weather-start',
+            options=[
+                {'label': 'Ветер', 'value': '1'},
+                {'label': 'Влажность', 'value': '2'},
+                {'label': 'Температура', 'value': '3'}
+            ]
+        ),
+        html.Div(id='output-start-weather', className='mt-3'),
+        dcc.Slider(
+        id='my-slider-start',
+        min=1,
+        max=5,
+        step=1,
+        value=5,
+        marks={i: str(i) for i in range(1, 6, 1)}
+    ),
+    html.Div(id='slider-output-start'),  # Уникальный id для вывода
+    ])
+], className='mb-4', style={'width': '800px'})
+
+card_end_weather = dbc.Card([
+    dbc.CardHeader('Конечная точка маршрута', className='text-left'),
+    dbc.CardBody([
+html.P("Выбери погодный параметр для просмотра", className='card-text'),
+        dcc.Dropdown(
+            id='dropdown-weather_end',
+            options=[
+                {'label': 'Ветер', 'value': '1'},
+                {'label': 'Влажность', 'value': '2'},
+                {'label': 'Температура', 'value': '3'}
+            ]),
+        html.Div(id='output-end_weather', className='mt-3'),dcc.Slider(
+        id='my-slider_end',
+        min=1,
+        max=5,
+        step=1,
+        value=5,
+        marks={i: str(i) for i in range(1, 6, 1)}
+    ),
+    html.Div(id='slider-output_end'),
+    ])
+], className='mb-4', style={'width': '800px'})
