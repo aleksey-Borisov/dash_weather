@@ -2,31 +2,174 @@ import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px
-import dash_bootstrap_components as dbc
-import ast
-import pandas as pd
-import numpy as np
-import graphs
-import cards
-
+import graphs  # Убедитесь, что этот модуль доступен
+import accu_weather
+# Инициализация приложения
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-n=5
+# Глобальная переменная для хранения данных
+global_data = {
+    'start': 'Москва',
+    'end': 'Санкт-Петербург'
+}
 
+# Основной макет приложения
 app.layout = html.Div([
-  dbc.Container([
-    html.H1('Погода на маршруте', className='text-center text-dark'),
-    # Строка для всех карт в одном столбце
-    dbc.Row([
-      dbc.Col(cards.card_start_weather, md=12),  # Начальная карта
-      dbc.Col(cards.card_end_weather, md=12),  # Конечная карта
-    ]),
-    dbc.Row(cards.cards_dop)
-  ], fluid=True)
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content'),  # Контейнер для отображения содержимого страниц
+    html.Div(id='global-data-output', className='mt-3')  # Для отображения global_data
 ])
 
+card_start = dbc.Card([
+    dbc.CardHeader(id='card-start-header', className='text-left'),
+    dbc.CardBody([
+        dcc.Input(id='input-start', type='text', placeholder='Введите город', style={'width': '100%'}),
+        html.Button('Отправить', id='submit-start', n_clicks=0, className='btn btn-primary', style={'marginTop': '10px'}),
+        html.Div(id='output-start', className='mt-3')
+    ])
+], className='mb-4')
 
+card_end = dbc.Card([
+    dbc.CardHeader(id='card-end-header', className='text-left'),
+    dbc.CardBody([
+        dcc.Input(id='input-end', type='text', placeholder='Введите город', style={'width': '100%'}),
+        html.Button('Отправить', id='submit-end', n_clicks=0, className='btn btn-primary', style={'marginTop': '10px'}),
+        html.Div(id='output-end', className='mt-3')
+    ])
+], className='mb-4')
+
+card_button = dbc.Card([
+    dbc.CardBody([
+        dcc.Link(
+            html.Button('Перейти на страницу погоды', id='go-to-page-weather', n_clicks=0, className='btn btn-success'),
+            href='/page-weather',
+            style={'textDecoration': 'none'}
+        )
+    ], className='text-center')
+])
+
+# Функция для отображения формы
+def form_layout():
+    return dbc.Container([
+        dbc.Row([dbc.Col(card_start, md=4)], align='center', justify='center'),
+        dbc.Row([dbc.Col(card_end, md=4)], align='center', justify='center'),
+        dbc.Row([dbc.Col(card_button, md=12)], align='center', justify='center')
+    ], fluid=True)
+
+def weather_layout():
+    return html.Div([
+        dbc.Container([
+            html.H1('Погода на маршруте', className='text-center text-dark'),
+            # Строка для всех карт в одном столбце
+            dbc.Row([
+                dbc.Col(card_start_weather, md=12),  # Начальная карта
+                dbc.Col(card_end_weather, md=12),  # Конечная карта
+            ])
+        ], fluid=True)
+    ])
+
+# Коллбэки для обновления начальной и конечной точек
+@app.callback(
+    Output('output-start', 'children'),
+    Input('submit-start', 'n_clicks'),
+    Input('input-start', 'value')
+)
+def update_start_output(n_clicks, value):
+    if n_clicks > 0 and value:
+        global_data['start'] = value
+        return f'Вы ввели начальную точку: {value}'
+    return ''
+
+@app.callback(
+    Output('output-end', 'children'),
+    Input('submit-end', 'n_clicks'),
+    Input('input-end', 'value')
+)
+def update_end_output(n_clicks, value):
+    if n_clicks > 0 and value:
+        global_data['end'] = value
+        return f'Вы ввели конечную точку: {value}'
+    return ''
+
+# Коллбэк для отображения текущего состояния global_data
+@app.callback(
+    Output('global-data-output', 'children'),
+    Input('submit-start', 'n_clicks'),
+    Input('submit-end', 'n_clicks')
+)
+def update_global_data(n_clicks_start, n_clicks_end):
+    return f'Текущие данные: Начальная точка - {global_data["start"]}, Конечная точка - {global_data["end"]}'
+
+# Коллбэк для отображения страницы погоды
+@app.callback(
+    Output('page-content', 'children'),
+    Input('url', 'pathname')
+)
+def display_page(pathname):
+    if pathname == '/page-weather':
+        return weather_layout()  # Возвращаем макет страницы погоды
+    return form_layout()  # Возвращаем макет формы по умолчанию
+
+# Коллбэк для перехода на страницу погоды
+@app.callback(
+    Output('url', 'pathname'),
+    Input('go-to-page-weather', 'n_clicks')
+)
+def go_to_weather(n_clicks):
+    if n_clicks > 0:
+        return '/page-weather'
+    return dash.no_update
+
+# Определение карточек для отображения погоды
+card_start_weather = dbc.Card([
+    dbc.CardHeader(html.P("Начальная точка", id='card-start-header', className='text-left')),
+    dbc.CardBody([
+        html.P("Выбери погодный параметр для просмотра", className='card-text'),
+        dcc.Dropdown(
+            id='dropdown-weather-start',
+            options=[
+                {'label': 'Ветер', 'value': '1'},
+                {'label': 'Влажность', 'value': '2'},
+                {'label': 'Температура', 'value': '3'}
+            ]
+        ),
+        html.Div(id='output-start-weather', className='mt-3'),
+        dcc.Slider(
+            id='my-slider-start',
+            min=1,
+            max=5,
+            step=1,
+            value=5,
+            marks={i: str(i) for i in range(1, 6, 1)}
+        ),
+        html.Div(id='slider-output-start'),
+    ])
+], className='mb-4', style={'width': '800px'})
+
+card_end_weather = dbc.Card([
+    dbc.CardHeader(html.P("Конечная точка", id='card-end-header', className='text-left')),
+    dbc.CardBody([
+        html.P("Выбери погодный параметр для просмотра", className='card-text'),
+        dcc.Dropdown(
+            id='dropdown-weather-end',
+            options=[
+                {'label': 'Ветер', 'value': '1'},
+                {'label': 'Влажность', 'value': '2'},
+                {'label': 'Температура', 'value': '3'}
+            ]
+        ),
+        html.Div(id='output-end-weather', className='mt-3'),
+        dcc.Slider(
+            id='my-slider-end',
+            min=1,
+            max=5,
+            step=1,
+            value=5,
+            marks={i: str(i) for i in range(1, 6, 1)}
+        ),
+        html.Div(id='slider-output-end'),
+    ])
+], className='mb-4', style={'width': '800px'})
 
 @app.callback(
     Output('output-start-weather', 'children'),
@@ -35,7 +178,7 @@ app.layout = html.Div([
     Input('my-slider-start', 'value')
 )
 def update_start_weather(selected_value, value):
-    graph_temp = graphs.create_temp(accu_weather.get_forecast_0().head(value))
+    graph_temp = graphs.create_temp(graphs.df.head(value))
     graph_wind = graphs.create_wind(graphs.df.head(value))
     graph_hum = graphs.create_hum(graphs.df.head(value))
     if selected_value == '1':
@@ -46,21 +189,24 @@ def update_start_weather(selected_value, value):
         return "Вы выбрали: Температура", graph_temp
     return "Выберите параметр"
 
-# Колбэки для обновления вывода для каждой дополнительной карты
-for i in range(1, n + 1):
-    @app.callback(
-        Output(f'output-{i}-weather', 'children'),
-        Input(f'dropdown-weather-{i}', 'value')
-    )
-    def update_weather(selected_value, card_type=i):
-        if selected_value == '1':
-            return f"Вы выбрали: Ветер для точки { card_type}"
-        elif selected_value == '2':
-            return f"Вы выбрали: Влажность для точки {card_type}"
-        elif selected_value == '3':
-            return f"Вы выбрали: Температура для точки {card_type}"
-        return "Выберите параметр"
 
+@app.callback(
+    Output('output-end-weather', 'children'),
+          Output('slider-output-end', 'children'),
+    Input('dropdown-weather-end', 'value'),
+    Input('my-slider-end', 'value')
+)
+def update_end_weather(selected_value, value):
+    graph_temp = graphs.create_temp(graphs.df.head(value))
+    graph_wind = graphs.create_wind(graphs.df.head(value))
+    graph_hum = graphs.create_hum(graphs.df.head(value))
+    if selected_value == '1':
+        return "Вы выбрали: Ветер",graph_wind
+    elif selected_value == '2':
+        return "Вы выбрали: Влажность", graph_hum
+    elif selected_value == '3':
+        return "Вы выбрали: Температура", graph_temp
+    return "Выберите параметр"
 
 
 if __name__ == '__main__':
