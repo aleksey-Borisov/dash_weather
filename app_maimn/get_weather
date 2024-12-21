@@ -1,0 +1,38 @@
+from dash import Dash, html, dcc, callback, Output, Input
+import plotly.express as px
+import dash_bootstrap_components as dbc
+import ast
+import pandas as pd
+import numpy as np
+import requests
+api_key = 'ZzA647LQVnhapLTMZePDwaKx7anbyaln'
+def find_key_city(city):
+  param1={'apikey': api_key, 'q': city , 'language':'ru-ru', 'details' : 'true'}
+  response = requests.get(f'http://dataservice.accuweather.com/locations/v1/cities/search',params=param1).json()
+  return response[0]['Key'], response[0]['GeoPosition']
+
+
+def get_forecast(city):
+    param2={'apikey': api_key ,'language':'ru-ru', 'details':'true', 'metric':'true'}
+    weather_forecast = []
+    response = requests.get(f'http://dataservice.accuweather.com/forecasts/v1/daily/5day/{find_key_city(city)[0]}', params=param2).json()
+    lan_lon_dict = find_key_city(city)[1]
+    for i in range(5):
+        weather_for_day ={
+            'temp' : (response[ "DailyForecasts"][i]["Temperature"]["Minimum"]["Value"] + response[ "DailyForecasts"][i]["Temperature"]["Maximum"]["Value"])/2,
+            'wind_speed' : response[ "DailyForecasts"][i]['Day']['Wind']['Speed']['Value'],
+            'Humidity' : response[ "DailyForecasts"][i]['Day']["RelativeHumidity"]["Average"],
+            'date': response[ "DailyForecasts"][i]["Date"][0:10],
+            'lat': lan_lon_dict['Latitude'],
+            'lon' : lan_lon_dict['Longitude']
+        }
+        weather_forecast.append(weather_for_day)
+    df = pd.DataFrame(weather_forecast)
+    return  df
+
+def get_forecast_0():
+  return [{'temp': -13.4, 'wind_speed': 24.1, 'Humidity': 81, 'date': '2024-12-18'},
+ {'temp': -6.25, 'wind_speed': 14.8, 'Humidity': 86, 'date': '2024-12-19'},
+ {'temp': 1.4, 'wind_speed': 16.7, 'Humidity': 99, 'date': '2024-12-20'},
+ {'temp': -0.95, 'wind_speed': 14.8, 'Humidity': 89, 'date': '2024-12-21'},
+ {'temp': -2.75, 'wind_speed': 13.0, 'Humidity': 85, 'date': '2024-12-22'}]
