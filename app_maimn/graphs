@@ -1,16 +1,15 @@
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, html
-from dash.dependencies import Input, Output
 import plotly.express as px
 import dash_bootstrap_components as dbc
 import ast
 import pandas as pd
 import numpy as np
-import app_main
+
 import cards
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-n=5
+n=3
 
 weather = [{'temp': -13.4, 'wind_speed': 24.1, 'Humidity': 81, 'date': '2024-12-18'},
  {'temp': -6.25, 'wind_speed': 14.8, 'Humidity': 86, 'date': '2024-12-19'},
@@ -20,7 +19,6 @@ weather = [{'temp': -13.4, 'wind_speed': 24.1, 'Humidity': 81, 'date': '2024-12-
 
 
 df = pd.DataFrame(weather)
-
 
 def create_temp(df):
   fig_temp = px.line(df, x='date', y='temp', title='Температура по дням', markers=True)
